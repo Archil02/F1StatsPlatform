@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drivers — F1 Stats</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav id="main-nav"></nav>
+
+<main class="page">
+    <div class="page-header">
+        <p class="page-eyebrow">2026 · Driver Standings</p>
+        <h1 class="page-title">მძღოლების სტანდინგი</h1>
+        <p class="page-subtitle">სეზონის ქულები, გამარჯვებები და პოდიუმები.</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="standings-container">
+        <div class="loading-row"><span class="spinner"></span> იტვირთება...</div>
+    </div>
+</main>
+
+<div id="toast"></div>
+
+<script src="/app.js"></script>
+<script>
+    guardAuth();
+    renderNav('drivers');
+
+    async function loadDrivers() {
+      try {
+        const drivers = await apiFetch('/drivers');
+        renderStandings(drivers);
+      } catch(e) {
+        document.getElementById('standings-container').innerHTML =
+          `<div class="empty-state">⚠️ მძღოლების მონაცემები ვერ ჩაიტვირთა.<p>${e.message}</p></div>`;
+      }
+    }
+
+    function renderStandings(drivers) {
+      const el = document.getElementById('standings-container');
+      if (!drivers.length) {
+        el.innerHTML = '<div class="empty-state">მონაცემები ჯერ მიუწვდომელია.</div>';
+        return;
+      }
+
+      el.innerHTML = `
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>მძღოლი</th>
+              <th>გუნდი</th>
+              <th>ქვეყანა</th>
+              <th title="Points">PTS</th>
+              <th title="Wins">WIN</th>
+              <th title="Podiums">POD</th>
+              <th title="Races">RCE</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${drivers.map((d, i) => {
+              const pos = i + 1;
+              return `
+              <tr>
+                <td><span class="standing-pos ${posClass(pos)}">${pos}</span></td>
+                <td>
+                  <div class="driver-full">
+                    <span class="code">${d.code || '—'}</span>
+                    <span class="name">${d.firstName || ''} ${d.lastName || ''}</span>
+                  </div>
+                </td>
+                <td style="color:var(--muted);font-size:0.82rem">${d.teamName || '—'}</td>
+                <td style="color:var(--muted);font-size:0.82rem">${d.nationality || '—'}</td>
+                <td class="stat-cell pts">${d.seasonPoints ?? 0}</td>
+                <td class="stat-cell">${d.wins ?? 0}</td>
+                <td class="stat-cell">${d.podiums ?? 0}</td>
+                <td class="stat-cell" style="color:var(--muted)">${d.racesEntered ?? 0}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    loadDrivers();
+</script>
+</body>
+</html>

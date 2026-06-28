@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>შესვლა — F1 Stats</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-logo">F1<span>STATS</span></div>
+
+        <h1 class="auth-heading">შესვლა</h1>
+        <p class="auth-sub">შედი შენს ანგარიშზე</p>
+
+        <div id="error-box" class="form-error"></div>
+
+        <div class="form-group">
+            <label class="form-label" for="email">ემაილი</label>
+            <input class="form-input" type="email" id="email" placeholder="name@example.com" autocomplete="email">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="password">პაროლი</label>
+            <input class="form-input" type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+
+        <button class="btn btn-primary btn-block" id="login-btn" onclick="doLogin()">შესვლა</button>
+
+        <div class="auth-footer">
+            ანგარიში არ გაქვს? <a href="/register.html">რეგისტრაცია</a>
+        </div>
+    </div>
+</div>
+
+<script src="/app.js"></script>
+<script>
+    // თუ უკვე შესულია — გადაამისამართე
+    if (Auth.isLoggedIn()) {
+      window.location.href = getNext();
+    }
+
+    function getNext() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('next') || '/index.html';
+    }
+
+    // Enter-ით submit
+    document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+    async function doLogin() {
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const errBox   = document.getElementById('error-box');
+      const btn      = document.getElementById('login-btn');
+
+      errBox.classList.remove('show');
+
+      if (!email || !password) {
+        errBox.textContent = 'გთხოვთ შეავსოთ ყველა ველი.';
+        errBox.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>';
+
+      try {
+        const data = await apiFetch('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password }),
+        });
+        Auth.save(data);
+        window.location.href = getNext();
+      } catch(e) {
+        errBox.textContent = e.message;
+        errBox.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'შესვლა';
+      }
+    }
+</script>
+</body>
+</html>

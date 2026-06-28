@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule — F1 Stats</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav id="main-nav"></nav>
+
+<main class="page">
+    <div class="page-header">
+        <p class="page-eyebrow">2026 · FIA Formula 1 World Championship</p>
+        <h1 class="page-title">Race Schedule</h1>
+        <p class="page-subtitle">ჩატარებულ რბოლებზე დასაჭერად საჭიროა ავტორიზაცია.</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="race-list" class="race-list">
+        <div class="loading-row"><span class="spinner"></span> იტვირთება...</div>
+    </div>
+</main>
+
+<!-- Results Modal -->
+<div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal">
+        <div class="modal-header">
+            <div>
+                <p id="modal-eyebrow" class="page-eyebrow" style="margin-bottom:0.25rem"></p>
+                <h2 id="modal-title" class="modal-title"></h2>
+            </div>
+            <button class="modal-close" onclick="closeModal()" aria-label="დახურვა">✕</button>
+        </div>
+        <div class="modal-body">
+            <div id="modal-body-content"></div>
+        </div>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="/app.js"></script>
+<script>
+    renderNav('schedule');
+
+    async function loadSchedule() {
+      try {
+        const races = await apiFetch('/schedule');
+        renderRaceList(races);
+      } catch (e) {
+        document.getElementById('race-list').innerHTML =
+          `<div class="empty-state">⚠️ კალენდარი ვერ ჩაიტვირთა.<p>${e.message}</p></div>`;
+      }
+    }
+
+    function renderRaceList(races) {
+      const el = document.getElementById('race-list');
+      if (!races.length) {
+        el.innerHTML = '<div class="empty-state">კალენდარი ცარიელია.</div>';
+        return;
+      }
+
+      el.innerHTML = races.map(r => `
+        <div class="race-row ${r.status === 'UPCOMING' ? 'upcoming' : ''}"
+             onclick="handleRaceClick(${r.id}, '${escHtml(r.name)}', '${r.status}', ${r.round})">
+          <span class="race-round">${String(r.round).padStart(2,'0')}</span>
+          <div class="race-info">
+            <div class="race-name">${escHtml(r.name)}</div>
+            <div class="race-circuit">${escHtml(r.circuitName || '')}${r.country ? ' · ' + escHtml(r.country) : ''}</div>
+          </div>
+          ${statusBadge(r.status)}
+          <div class="race-date">
+            ${fmtDate(r.raceDate)}
+            ${r.sessionStartUtc ? '<br><small>' + fmtDateTime(r.sessionStartUtc) + '</small>' : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function handleRaceClick(id, name, status, round) {
+      if (status === 'UPCOMING') {
+        showToast('ეს რბოლა ჯერ არ ჩატარებულა');
+        return;
+      }
+      if (!Auth.isLoggedIn()) {
+        window.location.href = '/login.html?next=' + encodeURIComponent(window.location.pathname);
+        return;
+      }
+      openModal(id, name, round);
+    }
+
+    async function openModal(raceId, raceName, round) {
+      const overlay = document.getElementById('modal-overlay');
+      document.getElementById('modal-eyebrow').textContent = 'Round ' + round + ' · Results';
+      document.getElementById('modal-title').textContent = raceName;
+      document.getElementById('modal-body-content').innerHTML =
+        '<div class="loading-row"><span class="spinner"></span> შედეგები იტვირთება...</div>';
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      try {
+        const results = await apiFetch('/races/' + raceId + '/results');
+        renderResults(results);
+      } catch(e) {
+        document.getElementById('modal-body-content').innerHTML =
+          `<div class="empty-state">⚠️ შედეგები ვერ ჩაიტვირთა.<p>${e.message}</p></div>`;
+      }
+    }
+
+    function renderResults(results) {
+      if (!results.length) {
+        document.getElementById('modal-body-content').innerHTML =
+          '<div class="empty-state">შედეგები ჯერ მიუწვდომელია.</div>';
+        return;
+      }
+
+      document.getElementById('modal-body-content').innerHTML = `
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>POS</th>
+              <th>მძღოლი</th>
+              <th>გუნდი</th>
+              <th>PTS</th>
+              <th>სტატუსი</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${results.map(r => `
+              <tr>
+                <td><span class="pos-num ${posClass(r.finishPosition)}">${r.finishPosition ?? 'DNF'}</span></td>
+                <td>
+                  <span class="driver-code">${r.driverCode || ''}</span>
+                  <span style="color:var(--muted);font-size:0.8rem;margin-left:0.4rem">
+                    ${r.driverFirstName || ''} ${r.driverLastName || ''}
+                  </span>
+                </td>
+                <td style="color:var(--muted);font-size:0.82rem">${r.teamName || '—'}</td>
+                <td class="points-cell">${r.points ?? 0}</td>
+                <td style="color:var(--muted);font-size:0.8rem">${r.status || '—'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('modal-overlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    function escHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    loadSchedule();
+</script>
+</body>
+</html>
