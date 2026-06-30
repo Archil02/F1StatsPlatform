@@ -11,6 +11,22 @@ F1 სტატისტიკისა და შეტყობინებე
 
 ### ნაბიჯები
 
+## კონფიგურაცია
+
+თუ PostgreSQL-ის username ან password განსხვავებულია,
+დააყენე environment variables:
+
+| Variable | აღწერა | Default |
+|----------|--------|---------|
+| DB_USERNAME | PostgreSQL username | postgres |
+| DB_PASSWORD | PostgreSQL password | postgres |
+
+**IntelliJ-ში დაყენება:**
+Run → Edit Configurations → Environment Variables:
+DB_USERNAME=შენი_იუზერი
+DB_PASSWORD=შენი_პაროლი
+
+
 **1. Database შექმენი pgAdmin-ში:**
 ```sql
 CREATE DATABASE f1platform;
@@ -25,7 +41,7 @@ CREATE DATABASE f1platform;
 
 **3. Browser-ში გახსენი:**
 ```
-http://localhost:8080
+http://localhost:8090
 ```
 
 ---
@@ -36,7 +52,7 @@ http://localhost:8080
 |-------|-------------------|-----------|
 | Admin | admin@f1stats.com | admin123  |
 
-რეგისტრაციაც შეგიძლია — `http://localhost:8080/register.html`
+რეგისტრაციაც შეგიძლია — `http://localhost:8090/register.html`
 
 ---
 
