@@ -22,7 +22,7 @@ public class EmailService {
 
     @Async
     public void sendRaceStartedEmails(Race race) {
-        List<AppUser> users = appUserRepository.findAllByEnabledTrue();
+        List<AppUser> users = appUserRepository.findAllByEnabledTrueAndSubscribedToNotificationsTrue();
         if (users.isEmpty()) {
             return;
         }
@@ -35,13 +35,14 @@ public class EmailService {
 
     @Async
     public void sendRaceFinishedEmails(Race race) {
-        List<AppUser> users = appUserRepository.findAllByEnabledTrue();
+        List<AppUser> users = appUserRepository.findAllByEnabledTrueAndSubscribedToNotificationsTrue();
         if (users.isEmpty()) return;
 
         String subject = "🏆 F1: " + race.getName() + " — რბოლა დასრულდა!";
         String body = buildFinishedBody(race);
 
         sendToAll(users, subject, body);
+
     }
 
     private void sendToAll(List<AppUser> users, String subject, String body) {
@@ -53,7 +54,7 @@ public class EmailService {
                 message.setText("გამარჯობა, " + user.getFirstName() + "!\n\n" + body);
                 mailSender.send(message);
             } catch (MailException ex) {
-                System.out.println("ემაილი ვერ გაიგზავნა: " + user.getEmail() + " — " + ex.getMessage());
+                System.out.println("[Email] გაგზავნა ვერ მოხერხდა {} — {}" + user.getEmail() + ex.getMessage());
             }
         }
     }

@@ -55,13 +55,45 @@ function renderNav(activePage) {
       </div>
       <div class="nav-auth">
         ${loggedIn
-          ? `<span class="nav-user">${Auth.firstName()}</span>
+      ? `<span class="nav-user">${Auth.firstName()}</span>
+             <button class="btn btn-ghost btn-sm" id="sub-toggle-btn" onclick="toggleSubscription()">🔔</button>
              <button class="btn btn-ghost btn-sm" onclick="logout()">გამოსვლა</button>`
-          : `<a href="/login.html"    class="btn btn-ghost btn-sm">შესვლა</a>
+      : `<a href="/login.html"    class="btn btn-ghost btn-sm">შესვლა</a>
              <a href="/register.html" class="btn btn-primary btn-sm">რეგისტრაცია</a>`
-        }
+  }
       </div>
     </div>`;
+
+  if (loggedIn) initSubscriptionToggle();
+}
+
+async function initSubscriptionToggle() {
+  try {
+    const res = await apiFetch("/users/me/subscription");
+    const btn = document.getElementById("sub-toggle-btn");
+    if (!btn) return;
+    updateSubToggleLabel(btn, res.subscribed);
+  } catch (e) { /* silent */ }
+}
+
+function updateSubToggleLabel(btn, subscribed) {
+  btn.textContent = subscribed ? "🔔 ჩართულია" : "🔕 გამორთულია";
+  btn.dataset.subscribed = subscribed;
+}
+
+async function toggleSubscription() {
+  const btn = document.getElementById("sub-toggle-btn");
+  const current = btn.dataset.subscribed === "true";
+  try {
+    const res = await apiFetch("/users/me/subscription", {
+      method: "PUT",
+      body: JSON.stringify({ subscribed: !current }),
+    });
+    updateSubToggleLabel(btn, res.subscribed);
+    showToast(res.subscribed ? "შეტყობინებები ჩაირთო" : "შეტყობინებები გაითიშა");
+  } catch (e) {
+    showToast("ვერ მოხერხდა: " + e.message);
+  }
 }
 
 function logout() { Auth.clear(); window.location.href = "/index.html"; }

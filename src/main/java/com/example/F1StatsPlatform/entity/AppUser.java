@@ -40,6 +40,10 @@ public class AppUser {
     private Boolean enabled = true;
 
     @Builder.Default
+    @Column(name = "subscribed_to_notifications", nullable = false)
+    private Boolean subscribedToNotifications = true;
+
+    @Builder.Default
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 }

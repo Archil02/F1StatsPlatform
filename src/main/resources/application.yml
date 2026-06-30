@@ -4,8 +4,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/f1platform
-    username: postgres
-    password: password
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
   jpa:
     hibernate:
@@ -18,8 +18,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME:archil.tsulaia1@gmail.com}
-    password: ${MAIL_PASSWORD:sioa foda wten rkhm}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -36,7 +36,7 @@ server:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:dev-only-secret-please-change-me-before-deploying-anywhere-real}
+    secret: ${JWT_SECRET}
     expiration-ms: 86400000
 
   external-api:

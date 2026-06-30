@@ -11,35 +11,44 @@ F1 სტატისტიკისა და შეტყობინებე
 
 ### ნაბიჯები
 
-## კონფიგურაცია
-
-თუ PostgreSQL-ის username ან password განსხვავებულია,
-დააყენე environment variables:
-
-| Variable | აღწერა | Default |
-|----------|--------|---------|
-| DB_USERNAME | PostgreSQL username | postgres |
-| DB_PASSWORD | PostgreSQL password | postgres |
-
-**IntelliJ-ში დაყენება:**
-Run → Edit Configurations → Environment Variables:
-DB_USERNAME=შენი_იუზერი
-DB_PASSWORD=შენი_პაროლი
-
-
 **1. Database შექმენი pgAdmin-ში:**
 ```sql
 CREATE DATABASE f1platform;
 ```
 
-**2. პროექტი გახსენი IntelliJ-ში და გაუშვი `F1StatsPlatformApplication`**
+**2. Environment variables დააყენე**
+
+პროექტში არის `.env.example` ფაილი ცარიელი ველებით — გადაარქვი `.env`-ად
+(ან უბრალოდ დააყენე environment variables ოპერაციულ სისტემაში / IntelliJ-ის
+Run Configuration-ში) და შეავსე საკუთარი მონაცემებით:
+
+| Variable      | აღწერა                                    |
+|----------------|--------------------------------------------|
+| `DB_USERNAME`  | PostgreSQL username                         |
+| `DB_PASSWORD`  | PostgreSQL password                         |
+| `MAIL_USERNAME`| Gmail მისამართი საიდანაც გაიგზავნება ემაილი |
+| `MAIL_PASSWORD`| Gmail **App Password** (არა ჩვეულებრივი პაროლი) |
+| `JWT_SECRET`   | ნებისმიერი გრძელი რენდომ სტრინგი             |
+
+**Gmail App Password-ის გენერაცია:** Google Account → Security →
+2-Step Verification → App Passwords.
+
+**IntelliJ-ში დაყენების გზა:**
+Run → Edit Configurations → Environment Variables →
+`DB_USERNAME=...;DB_PASSWORD=...;MAIL_USERNAME=...;MAIL_PASSWORD=...;JWT_SECRET=...`
+
+> ⚠️ Email ფუნქციონალი არასავალდებულოა — თუ `MAIL_USERNAME`/`MAIL_PASSWORD`
+> არ შეივსება, აპლიკაცია მაინც გაეშვება, უბრალოდ ემაილი არ გამოიგზავნება
+> (ფუნქციონალის დანარჩენ ნაწილზე გავლენას არ ახდენს).
+
+**3. პროექტი გახსენი IntelliJ-ში და გაუშვი `F1StatsPlatformApplication`**
 
 სერვერი ავტომატურად:
 - შექმნის ყველა ცხრილს
-- ჩამოტვირთავს 2026 სეზონის F1 მონაცემებს
+- ჩამოტვირთავს მიმდინარე სეზონის F1 მონაცემებს Jolpica API-დან
 - შექმნის Admin მომხმარებელს
 
-**3. Browser-ში გახსენი:**
+**4. Browser-ში გახსენი:**
 ```
 http://localhost:8090
 ```
@@ -58,10 +67,13 @@ http://localhost:8090
 
 ## ფუნქციონალი
 
-- 2026 სეზონის სრული კალენდარი (public)
-- ჩატარებული რბოლების შედეგები (login საჭიროა)
-- მძღოლების სტანდინგი ქულებით (login საჭიროა)
-- რბოლის დაწყება/დასრულებისას ყველა მომხმარებელს ეგზავნება
+- **Schedule** — სეზონის სრული კალენდარი (public)
+- **Race Results** — ჩატარებული რბოლების შედეგები (login საჭიროა)
+- **Drivers** — მძღოლების სტანდინგი ქულებით (login საჭიროა)
+- **Email ნოტიფიკაციები** — რბოლის დაწყება/დასრულებისას
+  ემაილი ეგზავნება მხოლოდ იმ მომხმარებლებს, ვინც ეს subscription ჩართული
+  აქვს. რეგისტრაციისას default-ად ჩართულია, ნებისმიერ დროს nav-ის 🔔 ღილაკით
+  შეიძლება ჩართვა/გამორთვა.
 
 ---
 

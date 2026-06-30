@@ -12,5 +12,5 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
 
     boolean existsByEmail(String email);
 
-    List<AppUser> findAllByEnabledTrue();
+    List<AppUser> findAllByEnabledTrueAndSubscribedToNotificationsTrue();
 }
